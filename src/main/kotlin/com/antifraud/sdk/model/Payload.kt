@@ -4,63 +4,51 @@ import org.json.JSONObject
 
 data class NetworkInfo(
     val ip: String = "",
-    val connectionType: String,
+    val isp: String = "",
     val carrier: String,
-    val isVpnActive: Boolean
+    val connectionType: String
 ) {
     fun toJsonObject(): JSONObject {
         return JSONObject().apply {
             put("ip", ip)
-            put("connectionType", connectionType)
+            put("isp", isp)
             put("carrier", carrier)
-            put("isVpnActive", isVpnActive)
-        }
-    }
-}
-
-data class HardwareInfo(
-    val cpuArchitecture: String,
-    val totalMemory: Long,
-    val freeStorage: Long,
-    val screenResolution: String,
-    val batteryLevel: Int,
-    val isCharging: Boolean,
-    val uptime: Long
-) {
-    fun toJsonObject(): JSONObject {
-        return JSONObject().apply {
-            put("cpuArchitecture", cpuArchitecture)
-            put("totalMemory", totalMemory)
-            put("freeStorage", freeStorage)
-            put("screenResolution", screenResolution)
-            put("batteryLevel", batteryLevel)
-            put("isCharging", isCharging)
-            put("uptime", uptime)
+            put("connectionType", connectionType)
         }
     }
 }
 
 data class SecurityInfo(
-    val isRootedOrJailbroken: Boolean,
+    val isRooted: Boolean,
     val isEmulator: Boolean,
-    val isMockLocation: Boolean,
     val isDebuggerAttached: Boolean,
     val isAppTampered: Boolean,
-    val appSignatureHash: String
+    val isMockLocation: Boolean
 ) {
     fun toJsonObject(): JSONObject {
         return JSONObject().apply {
-            put("isRootedOrJailbroken", isRootedOrJailbroken)
+            put("isRooted", isRooted)
             put("isEmulator", isEmulator)
-            put("isMockLocation", isMockLocation)
             put("isDebuggerAttached", isDebuggerAttached)
             put("isAppTampered", isAppTampered)
-            put("appSignatureHash", appSignatureHash)
+            put("isMockLocation", isMockLocation)
         }
     }
 }
 
-data class LocationInfo(
+data class BatteryInfo(
+    val level: Int,
+    val isCharging: Boolean
+) {
+    fun toJsonObject(): JSONObject {
+        return JSONObject().apply {
+            put("level", level)
+            put("isCharging", isCharging)
+        }
+    }
+}
+
+data class GpsInfo(
     val latitude: Double,
     val longitude: Double,
     val accuracy: Double
@@ -74,44 +62,57 @@ data class LocationInfo(
     }
 }
 
-data class AppInfo(
-    val appVersion: String,
-    val buildNumber: String
+data class ScreenInfo(
+    val width: Int,
+    val height: Int,
+    val dpi: Double
 ) {
     fun toJsonObject(): JSONObject {
         return JSONObject().apply {
-            put("appVersion", appVersion)
-            put("buildNumber", buildNumber)
+            put("width", width)
+            put("height", height)
+            put("dpi", dpi)
         }
     }
 }
 
+data class AppInfo(
+    val appVersion: String,
+    val buildNumber: String
+)
+
 data class DeviceInfo(
     val deviceId: String,
-    val platform: String = "Android",
+    val platform: String,
     val osVersion: String,
-    val model: String,
     val manufacturer: String,
-    val network: NetworkInfo,
-    val hardware: HardwareInfo,
+    val model: String,
+    val appVersion: String,
+    val buildNumber: String,
+    val stableDeviceHash: String,
+    val uptime: Long,
     val security: SecurityInfo,
-    val location: LocationInfo,
-    val app: AppInfo,
-    val collectedAt: String
+    val battery: BatteryInfo,
+    val network: NetworkInfo,
+    val gps: GpsInfo,
+    val screen: ScreenInfo
 ) {
     fun toJsonObject(): JSONObject {
         return JSONObject().apply {
             put("deviceId", deviceId)
             put("platform", platform)
             put("osVersion", osVersion)
-            put("model", model)
             put("manufacturer", manufacturer)
-            put("network", network.toJsonObject())
-            put("hardware", hardware.toJsonObject())
+            put("model", model)
+            put("appVersion", appVersion)
+            put("buildNumber", buildNumber)
+            put("stableDeviceHash", stableDeviceHash)
+            put("uptime", uptime)
             put("security", security.toJsonObject())
-            put("location", location.toJsonObject())
-            put("app", app.toJsonObject())
-            put("collectedAt", collectedAt)
+            put("battery", battery.toJsonObject())
+            put("network", network.toJsonObject())
+            put("gps", gps.toJsonObject())
+            put("screen", screen.toJsonObject())
         }
     }
 }

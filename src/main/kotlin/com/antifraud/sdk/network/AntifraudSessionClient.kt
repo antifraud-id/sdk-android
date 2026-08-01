@@ -40,6 +40,7 @@ object AntifraudSessionClient {
             .post(jsonBody.toRequestBody(JSON_MEDIA_TYPE))
             .addHeader("Content-Type", "application/json")
             .addHeader("X-Antifraud-Project-ID", projectId)
+            .addHeader("X-Antifraud-SDK-Version", com.antifraud.sdk.Antifraud.SDK_VERSION)
             .build()
 
         client.newCall(request).execute().use { response ->
@@ -55,7 +56,11 @@ object AntifraudSessionClient {
 
             return try {
                 val jsonResponse = JSONObject(responseBody)
-                jsonResponse.getString("session_id")
+                if (jsonResponse.has("sessionId")) {
+                    jsonResponse.getString("sessionId")
+                } else {
+                    jsonResponse.getString("session_id")
+                }
             } catch (e: Exception) {
                 throw IOException("Invalid response payload: $responseBody")
             }

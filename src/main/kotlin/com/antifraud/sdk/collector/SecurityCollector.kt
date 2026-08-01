@@ -9,7 +9,6 @@ import com.antifraud.sdk.model.SecurityInfo
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
-import java.security.MessageDigest
 
 object SecurityCollector {
 
@@ -18,15 +17,13 @@ object SecurityCollector {
         val emulator = isEmulator()
         val debugger = isDebuggerAttached(context)
         val tampered = isAppTampered(context)
-        val sigHash = getAppSignatureHash(context)
 
         return SecurityInfo(
-            isRootedOrJailbroken = rooted,
+            isRooted = rooted,
             isEmulator = emulator,
             isMockLocation = mockLocationDetected,
             isDebuggerAttached = debugger,
-            isAppTampered = tampered,
-            appSignatureHash = sigHash
+            isAppTampered = tampered
         )
     }
 
@@ -130,7 +127,7 @@ object SecurityCollector {
                     if (line.startsWith("TracerPid:")) {
                         val pid = line.substringAfter("TracerPid:").trim().toIntOrNull()
                         if (pid != null && pid != 0) {
-                            return true
+                            return@isDebuggerAttached true
                         }
                     }
                 }
@@ -144,7 +141,7 @@ object SecurityCollector {
             if (mapsFile.exists()) {
                 mapsFile.forEachLine { line ->
                     if (line.contains("frida", ignoreCase = true)) {
-                        return true
+                        return@isDebuggerAttached true
                     }
                 }
             }
@@ -164,31 +161,5 @@ object SecurityCollector {
         }
 
         return false
-    }
-
-    private fun getAppSignatureHash(context: Context): String {
-        return try {
-            val pm = context.packageManager
-            val signatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val packageInfo = pm.getPackageInfo(context.packageName, PackageManager.GET_SIGNING_CERTIFICATES)
-                packageInfo.signingInfo?.apkContentsSigners
-            } else {
-                @Suppress("DEPRECATION")
-                val packageInfo = pm.getPackageInfo(context.packageName, PackageManager.GET_SIGNATURES)
-                packageInfo.signatures
-            }
-
-            if (!signatures.isNullOrEmpty()) {
-                val sig = signatures[0]
-                val md = MessageDigest.getInstance("SHA-256")
-                md.update(sig.toByteArray())
-                val digest = md.digest()
-                digest.joinToString("") { "%02x".format(it) }
-            } else {
-                ""
-            }
-        } catch (e: Exception) {
-            ""
-        }
     }
 }

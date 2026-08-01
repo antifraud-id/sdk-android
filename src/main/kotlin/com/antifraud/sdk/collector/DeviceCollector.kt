@@ -5,8 +5,8 @@ import android.content.Context
 import android.os.BatteryManager
 import android.os.Build
 import android.os.SystemClock
-import android.os.StatFs
-import com.antifraud.sdk.model.HardwareInfo
+import com.antifraud.sdk.model.BatteryInfo
+import com.antifraud.sdk.model.ScreenInfo
 
 object DeviceCollector {
 
@@ -18,24 +18,17 @@ object DeviceCollector {
 
     fun getManufacturer(): String = Build.MANUFACTURER ?: ""
 
-    fun getHardwareInfo(context: Context): HardwareInfo {
-        val cpuArch = if (Build.SUPPORTED_ABIS.isNotEmpty()) Build.SUPPORTED_ABIS[0] else "unknown"
+    fun getCpuArchitecture(): String =
+        if (Build.SUPPORTED_ABIS.isNotEmpty()) Build.SUPPORTED_ABIS[0] else "unknown"
 
+    fun getTotalMemoryMB(context: Context): Long {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
         val memoryInfo = ActivityManager.MemoryInfo()
         activityManager?.getMemoryInfo(memoryInfo)
-        val totalMemMB = memoryInfo.totalMem / (1024 * 1024)
+        return memoryInfo.totalMem / (1024 * 1024)
+    }
 
-        val freeStorageMB = try {
-            val stat = StatFs(context.filesDir.absolutePath)
-            (stat.availableBlocksLong * stat.blockSizeLong) / (1024 * 1024)
-        } catch (e: Exception) {
-            0L
-        }
-
-        val metrics = context.resources.displayMetrics
-        val screenRes = "${metrics.widthPixels}x${metrics.heightPixels}"
-
+    fun getBatteryInfo(context: Context): BatteryInfo {
         var batteryLevel = -1
         var isCharging = false
         val bm = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
@@ -44,17 +37,18 @@ object DeviceCollector {
             val status = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS)
             isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
         }
+        return BatteryInfo(level = batteryLevel, isCharging = isCharging)
+    }
 
-        val uptimeSec = SystemClock.elapsedRealtime() / 1000
-
-        return HardwareInfo(
-            cpuArchitecture = cpuArch,
-            totalMemory = totalMemMB,
-            freeStorage = freeStorageMB,
-            screenResolution = screenRes,
-            batteryLevel = batteryLevel,
-            isCharging = isCharging,
-            uptime = uptimeSec
+    fun getScreenInfo(context: Context): ScreenInfo {
+        val metrics = context.resources.displayMetrics
+        val dpi = if (metrics.densityDpi > 0) metrics.densityDpi.toDouble() else 0.0
+        return ScreenInfo(
+            width = metrics.widthPixels,
+            height = metrics.heightPixels,
+            dpi = dpi
         )
     }
+
+    fun getUptime(): Long = SystemClock.elapsedRealtime() / 1000
 }

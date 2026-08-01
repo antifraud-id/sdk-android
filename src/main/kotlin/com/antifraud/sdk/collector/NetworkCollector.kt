@@ -10,15 +10,12 @@ object NetworkCollector {
 
     fun getNetworkInfo(context: Context): NetworkInfo {
         var connectionType = "UNKNOWN"
-        var isVpnActive = false
 
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
         if (cm != null) {
             val activeNetwork = cm.activeNetwork
             val capabilities = cm.getNetworkCapabilities(activeNetwork)
             if (capabilities != null) {
-                isVpnActive = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
-
                 connectionType = when {
                     capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "WIFI"
                     capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> getMobileNetworkType(context)
@@ -32,10 +29,10 @@ object NetworkCollector {
         val carrier = tm?.networkOperatorName ?: ""
 
         return NetworkInfo(
-            ip = "",
-            connectionType = connectionType,
+            ip = "", // Always empty, server-observed
+            isp = "",
             carrier = carrier,
-            isVpnActive = isVpnActive
+            connectionType = connectionType
         )
     }
 
