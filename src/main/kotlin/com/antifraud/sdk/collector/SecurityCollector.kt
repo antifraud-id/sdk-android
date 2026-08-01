@@ -120,14 +120,16 @@ object SecurityCollector {
         val isDebuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         if (isDebuggable) return true
 
+        var attached = false
+
         try {
             val file = File("/proc/self/status")
             if (file.exists()) {
                 file.forEachLine { line ->
-                    if (line.startsWith("TracerPid:")) {
+                    if (!attached && line.startsWith("TracerPid:")) {
                         val pid = line.substringAfter("TracerPid:").trim().toIntOrNull()
                         if (pid != null && pid != 0) {
-                            return@isDebuggerAttached true
+                            attached = true
                         }
                     }
                 }
@@ -136,20 +138,22 @@ object SecurityCollector {
             // ignore
         }
 
-        try {
-            val mapsFile = File("/proc/self/maps")
-            if (mapsFile.exists()) {
-                mapsFile.forEachLine { line ->
-                    if (line.contains("frida", ignoreCase = true)) {
-                        return@isDebuggerAttached true
+        if (!attached) {
+            try {
+                val mapsFile = File("/proc/self/maps")
+                if (mapsFile.exists()) {
+                    mapsFile.forEachLine { line ->
+                        if (line.contains("frida", ignoreCase = true)) {
+                            attached = true
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                // ignore
             }
-        } catch (e: Exception) {
-            // ignore
         }
 
-        return false
+        return attached
     }
 
     private fun isAppTampered(context: Context): Boolean {
