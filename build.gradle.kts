@@ -71,7 +71,7 @@ afterEvaluate {
 
                 groupId = "com.antifraud.sdk"
                 artifactId = "antifraud-sdk"
-                version = "1.0.0"
+                version = (project.findProperty("version") as? String) ?: "1.0.0"
 
                 pom {
                     name.set("Antifraud SDK")
@@ -110,8 +110,7 @@ afterEvaluate {
 
         if (signingKeyId != null && signingPassword != null && signingKey != null) {
             useInMemoryPgpKeys(signingKeyId, signingPassword, signingKey)
+            sign(publishing.publications["release"])
         }
-
-        sign(publishing.publications["release"])
     }
 }
